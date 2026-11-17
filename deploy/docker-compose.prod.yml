@@ -1,0 +1,37 @@
+# Production on EC2: Caddy (reverse proxy, ports 80/443) -> app (port 8000, internal only).
+# The database is RDS, so there is no db service here.
+# Started by deploy/deploy.sh, which builds the watchlist:latest image and writes /opt/watchlist/.env.
+services:
+  app:
+    image: watchlist:latest
+    env_file: /opt/watchlist/.env
+    expose:
+      - "8000"            # reachable only by Caddy on the Docker network, not from the internet
+    restart: unless-stopped
+    logging: &logging
+      driver: json-file
+      options:
+        max-size: "10m"   # keep logs from filling the 8 GB disk
+        max-file: "3"
+
+  caddy:
+    image: caddy:2.8.4-alpine
+    ports:
+      - "80:80"
+      - "443:443"
+    environment:
+      # Empty -> serve plain HTTP on :80. Set to a domain (e.g. mywatchlist.duckdns.org)
+      # and Caddy gets a Let's Encrypt certificate and redirects HTTP -> HTTPS.
+      SITE_ADDRESS: ${SITE_ADDRESS:-}
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data       # keeps TLS certificates across restarts
+      - caddy_config:/config
+    depends_on:
+      - app
+    restart: unless-stopped
+    logging: *logging
+
+volumes:
+  caddy_data:
+  caddy_config:

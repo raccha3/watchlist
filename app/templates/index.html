@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Watch List</title>
+  <style>
+    :root { --bg:#f7f7f8; --card:#fff; --text:#1d1d1f; --muted:#6e6e73; --accent:#e8710a; --border:#e3e3e6; }
+    @media (prefers-color-scheme: dark) {
+      :root { --bg:#141416; --card:#1e1e21; --text:#f2f2f3; --muted:#9a9aa0; --accent:#ff9a3c; --border:#2e2e33; }
+    }
+    * { box-sizing: border-box; }
+    body { margin:0; font:16px/1.5 system-ui, -apple-system, Segoe UI, sans-serif; background:var(--bg); color:var(--text); }
+    main { max-width: 640px; margin: 0 auto; padding: 32px 16px; }
+    h1 { margin: 0 0 4px; }
+    .sub { color: var(--muted); margin: 0 0 24px; }
+    form.add { display:flex; gap:8px; flex-wrap:wrap; margin-bottom:24px; }
+    input[type=text] { flex:1 1 220px; padding:10px 12px; border:1px solid var(--border); border-radius:8px; background:var(--card); color:var(--text); font:inherit; }
+    select, button { padding:10px 12px; border:1px solid var(--border); border-radius:8px; background:var(--card); color:var(--text); font:inherit; cursor:pointer; }
+    button.primary { background:var(--accent); border-color:var(--accent); color:#fff; font-weight:600; }
+    ul { list-style:none; padding:0; margin:0; }
+    li { display:flex; align-items:center; gap:10px; padding:12px; background:var(--card); border:1px solid var(--border); border-radius:10px; margin-bottom:8px; }
+    li .title { flex:1; overflow-wrap:anywhere; }
+    li.watched .title { text-decoration: line-through; color: var(--muted); }
+    .tag { font-size:12px; padding:2px 8px; border-radius:999px; border:1px solid var(--border); color:var(--muted); }
+    li form { margin:0; }
+    li button { padding:6px 10px; font-size:14px; }
+    .error { padding:12px; border-radius:8px; background:#fde8e8; color:#8a1c1c; margin-bottom:16px; }
+    .empty { color: var(--muted); }
+    footer { margin-top:32px; font-size:14px; color:var(--muted); }
+    footer a { color: var(--muted); }
+  </style>
+</head>
+<body>
+<main>
+  <h1>🎬 Watch List</h1>
+  <p class="sub">Movies and shows to get to. Saved in PostgreSQL.</p>
+
+  {% if db_error %}
+    <div class="error">Can't reach the database right now. Check <a href="/health">/health</a>.</div>
+  {% endif %}
+
+  <form class="add" method="post" action="/items">
+    <input type="text" name="title" placeholder="e.g. Arrival" maxlength="200" required autofocus>
+    <select name="kind" aria-label="Type">
+      <option value="movie">Movie</option>
+      <option value="show">Show</option>
+    </select>
+    <button class="primary" type="submit">Add</button>
+  </form>
+
+  {% if items %}
+  <ul>
+    {% for item in items %}
+    <li class="{{ 'watched' if item.watched }}">
+      <span class="title">{{ item.title }}</span>
+      <span class="tag">{{ item.kind }}</span>
+      <form method="post" action="/items/{{ item.id }}/toggle">
+        <button type="submit">{{ 'Unwatch' if item.watched else 'Watched ✓' }}</button>
+      </form>
+      <form method="post" action="/items/{{ item.id }}/delete">
+        <button type="submit" aria-label="Delete {{ item.title }}">✕</button>
+      </form>
+    </li>
+    {% endfor %}
+  </ul>
+  {% elif not db_error %}
+    <p class="empty">Nothing here yet. Add something above.</p>
+  {% endif %}
+
+  <footer>Health check: <a href="/health">/health</a></footer>
+</main>
+</body>
+</html>

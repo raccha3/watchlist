@@ -1,0 +1,31 @@
+# Local development: app + a throwaway Postgres container.
+#   docker compose up --build   ->  http://localhost:8000
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: watchlist
+      POSTGRES_USER: watchlist
+      POSTGRES_PASSWORD: localdev   # local only, not a real secret
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U watchlist"]
+      interval: 5s
+      retries: 10
+
+  app:
+    build: .
+    ports:
+      - "8000:8000"
+    environment:
+      DB_HOST: db
+      DB_NAME: watchlist
+      DB_USER: watchlist
+      DB_PASSWORD: localdev
+    depends_on:
+      db:
+        condition: service_healthy
+
+volumes:
+  pgdata:

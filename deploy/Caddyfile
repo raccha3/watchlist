@@ -1,0 +1,11 @@
+# SITE_ADDRESS unset -> ":80" (plain HTTP on the instance's public IP/DNS).
+# SITE_ADDRESS=your.domain -> automatic HTTPS via Let's Encrypt.
+{$SITE_ADDRESS::80} {
+	encode gzip
+	reverse_proxy app:8000
+	header -Server
+	log {
+		output stdout
+		format console
+	}
+}
