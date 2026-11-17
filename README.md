@@ -14,6 +14,8 @@ A small database-backed web app (a watch list of movies and shows) deployed on a
 | `POST /items/<id>/delete` | Removes it |
 | `GET /health` | `200 {"status":"ok","database":"ok",...}` if the app can run `SELECT 1` on the database, `503` if not |
 
+**Stack:** The app is written in Flask, a lightweight Python web framework, and runs under Gunicorn, a production web server, with two worker processes, behind Caddy as a reverse proxy.
+
 ---
 
 ## Architecture
