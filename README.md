@@ -2,8 +2,8 @@
 
 A small database-backed web app (a watch list of movies and shows) deployed on a Linux EC2 instance with an RDS PostgreSQL database. The app is deliberately simple. The focus is on **how it's deployed and run**: least-privilege networking, no secrets in Git, automated deploys and health checks, all inside the AWS Free Tier.
 
-- **Live app:** `http://CHANGE-ME` <!-- fill in -->
-- **Health check:** `http://CHANGE-ME/health`
+- **Live app:** http://52.26.62.90
+- **Health check:** http://52.26.62.90/health
 - **Demo video:** CHANGE-ME
 
 | Path | What it does |
