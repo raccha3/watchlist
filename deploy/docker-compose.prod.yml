@@ -20,9 +20,11 @@ services:
       - "80:80"
       - "443:443"
     environment:
-      # Empty -> serve plain HTTP on :80. Set to a domain (e.g. mywatchlist.duckdns.org)
+      # Unset or empty -> ":80" (plain HTTP). Set to a domain (e.g. mywatchlist.duckdns.org)
       # and Caddy gets a Let's Encrypt certificate and redirects HTTP -> HTTPS.
-      SITE_ADDRESS: ${SITE_ADDRESS:-}
+      # The default must be applied here: Caddy's own {$VAR:default} only kicks in when the
+      # variable is absent, and an empty value makes the Caddyfile invalid.
+      SITE_ADDRESS: ${SITE_ADDRESS:-:80}
     volumes:
       - ./Caddyfile:/etc/caddy/Caddyfile:ro
       - caddy_data:/data       # keeps TLS certificates across restarts

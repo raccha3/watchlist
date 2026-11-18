@@ -53,17 +53,28 @@ docker build --quiet --build-arg APP_VERSION="$VERSION" -t "watchlist:$VERSION" 
 echo "== starting containers"
 docker compose -p watchlist -f deploy/docker-compose.prod.yml up -d --remove-orphans
 
-echo "== waiting for health check"
+echo "== waiting for health check (through Caddy, the same path users take)"
+# Checking only the app container isn't enough: if Caddy fails to start, the app is
+# "healthy" but nothing answers on port 80. So check end to end via Caddy.
+# -k / --resolve: works whether Caddy serves plain HTTP on :80 or HTTPS for a domain.
+check_url() {
+  if [ -n "${SITE_ADDRESS:-}" ]; then
+    curl -fsS -m 5 -k --resolve "$SITE_ADDRESS:443:127.0.0.1" "https://$SITE_ADDRESS/health"
+  else
+    curl -fsS -m 5 http://127.0.0.1/health
+  fi
+}
 for i in $(seq 1 30); do
-  status="$(docker inspect --format '{{.State.Health.Status}}' watchlist-app-1 2>/dev/null || echo missing)"
-  if [ "$status" = "healthy" ]; then
+  if body="$(check_url 2>/dev/null)"; then
     echo "   healthy after ~$((i * 5))s -- deployed $VERSION"
+    echo "   $body"
     docker image prune -f --filter "until=168h" >/dev/null
     exit 0
   fi
   sleep 5
 done
 
-echo "ERROR: app not healthy after 150s (last status: $status). Recent logs:" >&2
-docker compose -p watchlist -f deploy/docker-compose.prod.yml logs --tail 50 app >&2
+echo "ERROR: /health not reachable through Caddy after 150s. Container status and logs:" >&2
+docker compose -p watchlist -f deploy/docker-compose.prod.yml ps -a >&2
+docker compose -p watchlist -f deploy/docker-compose.prod.yml logs --tail 30 >&2
 exit 1
