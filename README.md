@@ -2,6 +2,9 @@
 
 A small database-backed web app (a watch list of movies and shows) deployed on a Linux EC2 instance with an RDS PostgreSQL database.
 
+- **Live app:** http://52.26.62.90
+- **Health check:** http://52.26.62.90/health
+
 ---
 
 ## Architecture
